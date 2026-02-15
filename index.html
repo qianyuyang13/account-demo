@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>アカウント削除</title>
+  <style>
+    /* シンプルでモダンなスタイル（外部依存なし） */
+    :root{
+      --bg:#0f1724;
+      --card:#0b1220;
+      --muted:#9aa4b2;
+      --danger:#e14b4b;
+      --accent:#5dd0c6;
+      --glass: rgba(255,255,255,0.03);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", sans-serif;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:linear-gradient(180deg, #071023 0%, #0d1320 100%);
+      color:#e6eef6;
+      padding:24px;
+    }
+    .container{
+      width:100%;
+      max-width:900px;
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius:12px;
+      padding:28px;
+      box-shadow: 0 6px 30px rgba(2,6,23,0.7);
+      display:grid;
+      grid-template-columns: 1fr 360px;
+      gap:24px;
+    }
+    header h1{margin:0 0 6px 0;font-size:20px}
+    header p{margin:0;color:var(--muted);font-size:14px}
+    .explain{background:var(--glass);padding:16px;border-radius:10px;color:var(--muted);font-size:14px}
+    form{display:flex;flex-direction:column;gap:12px}
+    label{font-size:13px;color:#cfe6ea}
+    input[type="password"], input[type="text"], select, textarea {
+      width:100%;
+      padding:10px 12px;
+      border-radius:8px;
+      border:1px solid rgba(255,255,255,0.06);
+      background:rgba(255,255,255,0.02);
+      color:inherit;
+      font-size:14px;
+    }
+    textarea{min-height:80px;resize:vertical;padding-top:10px}
+    .muted{color:var(--muted);font-size:13px}
+    .danger-box{
+      background:linear-gradient(90deg, rgba(225,75,75,0.06), rgba(225,75,75,0.02));
+      border:1px solid rgba(225,75,75,0.14);
+      padding:16px;border-radius:10px;
+    }
+    .actions{display:flex;gap:12px;align-items:center;margin-top:8px}
+    button{
+      padding:10px 14px;border-radius:10px;border:0;font-weight:600;font-size:14px;cursor:pointer;
+    }
+    .btn-cancel{background:transparent;color:var(--muted);border:1px solid rgba(255,255,255,0.04)}
+    .btn-delete{background:var(--danger);color:white;box-shadow:0 6px 18px rgba(225,75,75,0.12)}
+    .btn-delete[disabled]{opacity:0.45;cursor:not-allowed;box-shadow:none}
+    .side{
+      padding:18px;
+      border-radius:10px;
+      background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));
+      border:1px solid rgba(255,255,255,0.02);
+      font-size:14px;
+    }
+    .side h3{margin:0 0 8px 0}
+    .side ul{margin:8px 0 0 16px;padding:0;color:var(--muted)}
+    .note{font-size:13px;color:var(--muted)}
+    .confirm-helpers{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .small{font-size:12px;color:var(--muted)}
+    /* モーダル */
+    .modal-backdrop{
+      position:fixed;inset:0;background:rgba(2,6,23,0.6);display:none;align-items:center;justify-content:center;z-index:60;
+    }
+    .modal{
+      width:100%;max-width:560px;background:#071026;padding:20px;border-radius:12px;border:1px solid rgba(255,255,255,0.02);
+      box-shadow:0 10px 40px rgba(2,6,23,0.7);
+    }
+    .modal h2{margin:0;font-size:18px}
+    .modal p{color:var(--muted);margin:10px 0 0 0}
+    .row{display:flex;gap:8px;align-items:center}
+    .spinner{
+      width:18px;height:18px;border:3px solid rgba(255,255,255,0.08);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;display:inline-block;vertical-align:middle;margin-right:8px
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+    /* レスポンシブ */
+    @media (max-width:880px){
+      .container{grid-template-columns:1fr; padding:18px}
+      .side{order:2}
+    }
+    footer .muted{font-size:13px}
+    /* 各種補助 */
+    .error{color:#ffb4b4;font-size:13px}
+    .success{color:#baf3d7;font-size:13px}
+    .visually-hidden{position:absolute!important;height:1px;width:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap;border:0;padding:0;margin:-1px}
+  </style>
+</head>
+<body>
+  <main class="container" id="app">
+    <section>
+      <header>
+        <h1>アカウントの削除</h1>
+        <p class="muted">この操作は取り消せません。アカウントとすべてのデータが削除されます。</p>
+      </header>
+
+      <div class="explain" role="region" aria-label="説明">
+        <strong>注意</strong>：削除するとサービス上のデータ（プロフィール、履歴、アップロードしたファイル等）は完全に消えます。法的要件により一部ログは保持される場合があります。必要ならまずデータのエクスポートをしてください。
+      </div>
+
+      <form id="deleteForm" novalidate>
+        <div class="danger-box" aria-live="polite">
+          <label for="password">現在のパスワード（確認のため） <span class="small muted">必須</span></label>
+          <input id="password" name="password" type="password" autocomplete="current-password" required aria-required="true" />
+          <div id="passwordError" class="error" role="alert" style="display:none"></div>
+
+          <label for="confirmEmail">確認のためメールアドレスを入力してください（完全一致） <span class="small muted">必須</span></label>
+          <input id="confirmEmail" type="text" inputmode="email" placeholder="you@example.com" required aria-required="true" />
+          <div id="emailError" class="error" role="alert" style="display:none"></div>
+
+          <label for="reason">削除理由（任意）</label>
+          <select id="reason">
+            <option value="">選択してください（任意）</option>
+            <option value="privacy">プライバシー上の懸念</option>
+            <option value="not_use">利用頻度が低い</option>
+            <option value="another">別サービスへ移行</option>
+            <option value="other">その他</option>
+          </select>
+
+          <label for="feedback" class="muted">フィードバック（任意、今後の改善に役立てます）</label>
+          <textarea id="feedback" placeholder="ご意見があればご記入ください…"></textarea>
+
+          <div style="margin-top:8px" class="confirm-helpers">
+            <input id="ack" type="checkbox" />
+            <label for="ack" class="small">アカウントと保存データが完全に削除されることを理解しています。</label>
+          </div>
+
+          <div class="small note">削除後は同じメールで再登録できる場合がありますが、保持していたデータは復元できません。</div>
+
+          <div class="actions" style="margin-top:12px">
+            <button type="button" class="btn-cancel" id="btnCancel">キャンセル</button>
+            <button type="submit" class="btn-delete" id="btnDelete" disabled aria-disabled="true">アカウントを削除</button>
+          </div>
+        </div>
+      </form>
+
+      <footer style="margin-top:14px">
+        <div class="muted">当画面は安全な接続（HTTPS）上でご利用ください。</div>
+      </footer>
+    </section>
+
+    <aside class="side" aria-label="補助情報">
+      <h3>削除の影響</h3>
+      <ul>
+        <li>プロフィール・投稿・メッセージが削除されます。</li>
+        <li>課金がある場合は別途解約が必要な場合があります。</li>
+        <li>法律上保存が必要なログは例外的に保持される可能性があります。</li>
+      </ul>
+
+      <div style="margin-top:12px">
+        <h3>おすすめ</h3>
+        <ol style="padding-left:16px;color:var(--muted);font-size:14px">
+          <li>必要なデータをエクスポート</li>
+          <li>有料プランの解約（該当する場合）</li>
+          <li>本人確認情報の削除が必要ならサポートに連絡</li>
+        </ol>
+      </div>
+    </aside>
+  </main>
+
+  <!-- モーダル（最終確認） -->
+  <div class="modal-backdrop" id="modalBackdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalDesc">
+      <h2 id="modalTitle">本当にアカウントを削除しますか？</h2>
+      <p id="modalDesc">この操作は即時に開始されます。アカウント名（またはメール）を入力して確定してください。</p>
+
+      <div style="margin-top:12px">
+        <label for="finalConfirm" class="small">アカウントを完全に削除するため、メールアドレスをもう一度入力してください。</label>
+        <input id="finalConfirm" type="text" placeholder="you@example.com" />
+        <div id="finalError" class="error" role="alert" style="display:none"></div>
+      </div>
+
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+        <button id="modalCancel" class="btn-cancel">やめる</button>
+        <button id="modalDelete" class="btn-delete">削除を確定</button>
+      </div>
+
+      <div id="modalStatus" style="margin-top:12px" class="small muted"></div>
+    </div>
+  </div>
+
+  <noscript>
+    <div style="position:fixed;left:12px;right:12px;bottom:12px;background:#2b2b2b;color:white;padding:12px;border-radius:8px;font-size:14px">
+      JavaScriptが無効です。フォームは動作しません。サイト管理者にお問い合わせください。
+    </div>
+  </noscript>
+
+  <script>
+    // --- 初期設定（サンプル用メール: 実際はサーバからレンダリングする） ---
+    const currentUserEmail = "you@example.com"; // <<--- 本番ではサーバ側で差し替えること
+    // アクセス用要素
+    const password = document.getElementById('password');
+    const confirmEmail = document.getElementById('confirmEmail');
+    const ack = document.getElementById('ack');
+    const btnDelete = document.getElementById('btnDelete');
+    const deleteForm = document.getElementById('deleteForm');
+    const passwordError = document.getElementById('passwordError');
+    const emailError = document.getElementById('emailError');
+    const btnCancel = document.getElementById('btnCancel');
+
+    const modalBackdrop = document.getElementById('modalBackdrop');
+    const finalConfirm = document.getElementById('finalConfirm');
+    const finalError = document.getElementById('finalError');
+    const modalCancel = document.getElementById('modalCancel');
+    const modalDelete = document.getElementById('modalDelete');
+    const modalStatus = document.getElementById('modalStatus');
+
+    // ボタンの有効化ロジック
+    function updateDeleteButton() {
+      const can = password.value.trim().length >= 6
+                && confirmEmail.value.trim().length > 3
+                && ack.checked
+                && confirmEmail.value.trim() === currentUserEmail;
+      btnDelete.disabled = !can;
+      btnDelete.setAttribute('aria-disabled', String(!can));
+    }
+    password.addEventListener('input', ()=>{ passwordError.style.display='none'; updateDeleteButton(); });
+    confirmEmail.addEventListener('input', ()=>{ emailError.style.display='none'; updateDeleteButton(); });
+    ack.addEventListener('change', updateDeleteButton);
+
+    btnCancel.addEventListener('click', ()=>{
+      // 単に戻すかモーダル閉じるだけ。本当にキャンセルなら別ページへ誘導するなど
+      window.history.back();
+    });
+
+    // フォーム送信 → モーダルで最終確認
+    deleteForm.addEventListener('submit', (e)=>{
+      e.preventDefault();
+      // 基本バリデーション（クライアント）
+      if (password.value.trim().length < 6){
+        passwordError.textContent = "正しいパスワードを入力してください（6文字以上）。";
+        passwordError.style.display = 'block';
+        return;
+      }
+      if (confirmEmail.value.trim() !== currentUserEmail){
+        emailError.textContent = "入力したメールアドレスが一致しません。";
+        emailError.style.display = 'block';
+        return;
+      }
+      // モーダル表示
+      finalConfirm.value = "";
+      finalError.style.display = 'none';
+      modalStatus.textContent = "";
+      openModal();
+    });
+
+    function openModal(){
+      modalBackdrop.style.display = 'flex';
+      modalBackdrop.setAttribute('aria-hidden', 'false');
+      // フォーカス管理（簡易）
+      setTimeout(()=> finalConfirm.focus(), 50);
+      trapFocus(modalBackdrop);
+    }
+    function closeModal(){
+      modalBackdrop.style.display = 'none';
+      modalBackdrop.setAttribute('aria-hidden', 'true');
+      releaseFocusTrap();
+      btnDelete.focus();
+    }
+
+    modalCancel.addEventListener('click', ()=>{ closeModal(); });
+
+    // モーダル内の「削除を確定」ボタン
+    modalDelete.addEventListener('click', async ()=>{
+      finalError.style.display = 'none';
+      const v = finalConfirm.value.trim();
+      if (v !== currentUserEmail){
+        finalError.textContent = "メールアドレスが一致しません。完全に一致する文字列を入力してください。";
+        finalError.style.display = 'block';
+        finalConfirm.focus();
+        return;
+      }
+      // 状態表示
+      modalStatus.innerHTML = '<span class="spinner" aria-hidden="true"></span> 削除処理を実行中…';
+      disableModalButtons(true);
+
+      // ここでサーバに本当に削除リクエストを送る
+      // 例:
+      // const payload = {
+      //   password: password.value,
+      //   reason: document.getElementById('reason').value,
+      //   feedback: document.getElementById('feedback').value
+      // };
+      // const resp = await fetch('/api/delete-account', {method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify(payload)});
+      // const data = await resp.json();
+
+      // 本サンプルでは擬似的に遅延させ成功/失敗を示す
+      setTimeout(()=>{
+        // 擬似成功
+        const success = true; // 本番は resp.ok などで判定
+        if (success){
+          modalStatus.innerHTML = '<span class="success">アカウント削除のリクエストが受理されました。処理が完了すると自動的にサインアウトされます。</span>';
+          // UI レスポンス（例: リダイレクトやサインアウト）
+          setTimeout(()=> {
+            // ここではリダイレクトを行う例
+            // location.href = '/goodbye';
+            // サンプルのためモーダルを閉じない（実際はサインアウト等へ）
+            modalStatus.innerHTML += '<div class="small muted" style="margin-top:8px">（サンプルのため実際のリダイレクトは行いません）</div>';
+            disableModalButtons(false);
+          }, 800);
+        } else {
+          modalStatus.innerHTML = '';
+          finalError.textContent = "削除処理に失敗しました。後でもう一度お試しください。";
+          finalError.style.display = 'block';
+          disableModalButtons(false);
+        }
+      }, 1300);
+    });
+
+    function disableModalButtons(v){
+      modalDelete.disabled = v;
+      modalCancel.disabled = v;
+      modalDelete.setAttribute('aria-disabled', String(v));
+      modalCancel.setAttribute('aria-disabled', String(v));
+    }
+
+    // --- フォーカストラップ（簡易） ---
+    let previousActive = null;
+    function trapFocus(container){
+      previousActive = document.activeElement;
+      const focusable = container.querySelectorAll('a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])');
+      const first = focusable[0];
+      const last = focusable[focusable.length -1];
+      function handle(e){
+        if (e.key === 'Tab'){
+          if (e.shiftKey){
+            if (document.activeElement === first){ e.preventDefault(); last.focus(); }
+          } else {
+            if (document.activeElement === last){ e.preventDefault(); first.focus(); }
+          }
+        } else if (e.key === 'Escape'){
+          closeModal();
+        }
+      }
+      container._trapHandler = handle;
+      document.addEventListener('keydown', handle);
+    }
+    function releaseFocusTrap(){
+      if (modalBackdrop && modalBackdrop._trapHandler){
+        document.removeEventListener('keydown', modalBackdrop._trapHandler);
+        modalBackdrop._trapHandler = null;
+      }
+      if (previousActive) previousActive.focus();
+      previousActive = null;
+    }
+
+    // 最初のボタン状態更新
+    updateDeleteButton();
+
+    // ユーザーにメールアドレスのヒントを表示（※実運用ではサーバでレンダリングする）
+    // （ユーザーのメールを DOM に直接挿入するときは XSS に注意）
+    (function insertEmailHint(){
+      const hintEls = document.querySelectorAll('.small.muted');
+      // ここでは何もしないが、実運用ではメールを表示したい場合は安全に処理してください。
+    })();
+  </script>
+</body>
+</html>

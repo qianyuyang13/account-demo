@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>アカウントが削除されています</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --card:#0f1726;
+      --muted:#9aa4b2;
+      --accent:#5dd0c6;
+      --danger:#e14b4b;
+      font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN", system-ui, -apple-system, sans-serif;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:linear-gradient(180deg,#061021,#0b1220);
+      color:#e6eef6;
+      padding:20px;
+    }
+    .panel{
+      width:100%;
+      max-width:920px;
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius:12px;
+      padding:28px;
+      display:grid;
+      grid-template-columns:1fr 360px;
+      gap:22px;
+      box-shadow:0 10px 50px rgba(2,6,23,0.6);
+      align-items:start;
+    }
+    .main h1{margin:0 0 8px 0;font-size:22px}
+    .main p{margin:0;color:var(--muted);font-size:14px}
+    .status{
+      margin-top:18px;
+      padding:18px;border-radius:10px;
+      background:linear-gradient(90deg, rgba(225,75,75,0.06), rgba(225,75,75,0.02));
+      border:1px solid rgba(225,75,75,0.12);
+    }
+    .status strong{display:block;font-size:16px;margin-bottom:6px}
+    .muted{color:var(--muted)}
+    .actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+    button{
+      padding:10px 14px;border-radius:10px;border:0;font-weight:600;font-size:14px;cursor:pointer;
+    }
+    .btn-primary{background:var(--accent);color:#032226}
+    .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted)}
+    .btn-danger{background:var(--danger);color:white}
+    .side{
+      padding:18px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));
+      border:1px solid rgba(255,255,255,0.02);
+      font-size:14px;
+    }
+    .side h3{margin:0 0 8px 0}
+    .note{font-size:13px;color:var(--muted);margin-top:10px}
+    .hint{background:rgba(255,255,255,0.02);padding:10px;border-radius:8px;margin-top:12px;color:var(--muted)}
+    .small{font-size:13px;color:var(--muted)}
+    .linklike{color:var(--accent);cursor:pointer;text-decoration:underline}
+    .visually-hidden{position:absolute!important;height:1px;width:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap;border:0;padding:0;margin:-1px}
+    .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:20px;background:#071026;padding:10px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);box-shadow:0 6px 20px rgba(0,0,0,0.6);display:none}
+    @media (max-width:880px){
+      .panel{grid-template-columns:1fr;padding:18px}
+      .side{order:2}
+    }
+  </style>
+</head>
+<body>
+  <main class="panel" role="main" aria-labelledby="title">
+    <section class="main" aria-label="メイン">
+      <h1 id="title">アカウントは削除されています 🗑️</h1>
+      <p class="muted">入力されたメールアドレス（またはアカウント）は既に削除されています。以下の選択肢から次のアクションを選んでください。</p>
+
+      <div class="status" role="status" aria-live="polite">
+        <strong>削除の状態:</strong>
+        <div id="deletionStateText" class="small">このアカウントは <strong>完全に削除済み</strong> です（復旧不可）。</div>
+        <div id="graceInfo" class="small muted" style="margin-top:8px;display:none">
+          ※ 一部サービスでは削除から一定期間（例: 14日）の猶予期間があり、その間は復旧できる場合があります。
+        </div>
+      </div>
+
+      <div style="margin-top:16px">
+        <label for="emailInput" class="small">試したメールアドレス</label>
+        <input id="emailInput" type="text" placeholder="you@example.com" style="width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit" />
+        <div id="emailError" class="small" style="color:#ffb4b4;display:none;margin-top:8px"></div>
+      </div>
+
+      <div class="actions" id="primaryActions" style="margin-top:12px">
+        <!-- ボタンはJSで動的に切り替え -->
+      </div>
+
+      <div class="note" id="explainBlock" style="margin-top:16px">
+        <strong>何が起きたの？</strong>
+        <div class="muted" style="margin-top:8px">
+          アカウント削除は通常、プロフィール・投稿・個人データ等をサービス側で削除する操作です。削除が「完全削除」の場合、同じメールで再登録しても以前のデータは復元できません。<br>
+          復旧が可能な「猶予期間」がある場合は、その手順を案内します。
+        </div>
+      </div>
+
+      <div class="hint" id="helpHint">
+        <strong>サポートが必要？</strong>
+        <div style="margin-top:8px" class="muted">
+          復旧リクエストや誤削除の確認はサポート経由で承ります。本人確認が必要です。サポートに連絡する場合は、以下の連絡先を使ってください。
+          <div style="margin-top:8px">
+            <span class="small">メール: </span><a id="supportMail" href="mailto:support@example.com?subject=アカウント削除について" class="linklike">support@example.com</a>
+            <span style="margin-left:12px" class="small">または</span>
+            <a id="supportUrl" href="#" class="linklike" style="margin-left:6px">サポートページ</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="side" aria-label="補助情報">
+      <h3>次にできること</h3>
+      <ul style="color:var(--muted);margin-top:8px;padding-left:18px">
+        <li>猶予期間内なら復旧リクエストを送る（復旧できる場合がある）</li>
+        <li>完全削除なら新規登録（同じメールで登録可だがデータは戻らない）</li>
+        <li>不審な削除の疑いがあればサポートへ連絡</li>
+      </ul>
+
+      <div style="margin-top:12px">
+        <h3>運用メモ（開発者向け）</h3>
+        <div class="small muted">
+          - サーバーは削除ステータス（soft_deleted, scheduled, permanently_deleted）を返すAPIを用意する。<br>
+          - 猶予期間(flow)がある場合は recovery_token を発行し安全に復旧処理を行う。<br>
+          - ログイン試行時はこのページにリダイレクトし、ユーザーに次のアクションを選ばせる。
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    // --- サンプルの動作ロジック（実運用ではサーバAPIに置き換えてください） ---
+    // 擬似データ: サーバから受け取った削除ステータスの例
+    // possible values: "permanently_deleted", "soft_deleted", "scheduled_deletion"
+    // ※ 本番ではログイン試行時にサーバがこのページを返し、status を埋め込むか API で取得する
+    let serverStatus = "permanently_deleted"; // ← 本番ではサーバ側で決定して埋め込む
+    // もし猶予期間があるなら次のように設定
+    // serverStatus = "soft_deleted"; // (復旧可能)
+    // serverStatus = "scheduled_deletion"; // (削除予定。猶予期間中)
+
+    const emailInput = document.getElementById('emailInput');
+    const primaryActions = document.getElementById('primaryActions');
+    const deletionStateText = document.getElementById('deletionStateText');
+    const graceInfo = document.getElementById('graceInfo');
+    const toast = document.getElementById('toast');
+    const emailError = document.getElementById('emailError');
+    const supportUrl = document.getElementById('supportUrl');
+    const supportMail = document.getElementById('supportMail');
+
+    // サポートURLのプレースホルダ
+    supportUrl.href = "/support"; // ← 実運用のサポートページに置換
+
+    function showToast(msg, timeout=3000){
+      toast.textContent = msg;
+      toast.style.display = 'block';
+      setTimeout(()=> toast.style.display='none', timeout);
+    }
+
+    function renderForStatus(){
+      primaryActions.innerHTML = '';
+      emailError.style.display = 'none';
+
+      if (serverStatus === 'permanently_deleted'){
+        deletionStateText.innerHTML = 'このアカウントは <strong>完全に削除済み（permanently deleted）</strong> です。データの復元はできません。';
+        graceInfo.style.display = 'none';
+
+        // ボタン: 新規登録、サポート、戻る
+        const signup = createButton('新規登録する', 'btn-primary', ()=>{
+          // ここは /signup などへ遷移
+          location.href = '/signup';
+        });
+        const contact = createButton('サポートに連絡する', 'btn-ghost', ()=>{
+          location.href = supportMail.href;
+        });
+        const back = createButton('サインイン画面に戻る', 'btn-ghost', ()=>{
+          location.href = '/login';
+        });
+        primaryActions.appendChild(signup);
+        primaryActions.appendChild(contact);
+        primaryActions.appendChild(back);
+
+      } else if (serverStatus === 'soft_deleted' || serverStatus === 'scheduled_deletion'){
+        // 復旧可能な例: 表示を変える
+        deletionStateText.innerHTML = serverStatus === 'soft_deleted'
+          ? 'このアカウントは一時的に削除（または無効化）されています。復旧できる可能性があります。'
+          : 'このアカウントは削除予定です。猶予期間中は復旧できる場合があります。';
+
+        graceInfo.style.display = 'block';
+
+        const recover = createButton('アカウントを復旧する', 'btn-primary', async ()=>{
+          const email = emailInput.value.trim();
+          if (!validateEmail(email)){
+            emailError.textContent = '有効なメールアドレスを入力してください。';
+            emailError.style.display = 'block';
+            return;
+          }
+          // 実際はここでサーバへ復旧リクエストを送る
+          // fetch('/api/recover-account', {method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify({email})})
+          //  .then(...)
+          showToast('復旧リクエストを送信しました。サポートからの指示をお待ちください。');
+        });
+
+        const contact = createButton('サポートに問い合わせ', 'btn-ghost', ()=>{
+          location.href = supportMail.href;
+        });
+
+        const signup = createButton('新規登録（別のメール）', 'btn-ghost', ()=>{
+          location.href = '/signup';
+        });
+
+        primaryActions.appendChild(recover);
+        primaryActions.appendChild(contact);
+        primaryActions.appendChild(signup);
+      } else {
+        // 不明なステータス
+        deletionStateText.innerHTML = 'アカウントの状態を確認できませんでした。サポートに連絡してください。';
+        graceInfo.style.display = 'none';
+        const contact = createButton('サポートに連絡する', 'btn-primary', ()=>{ location.href = supportMail.href; });
+        primaryActions.appendChild(contact);
+      }
+    }
+
+    function createButton(text, cls, onClick){
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = cls;
+      b.textContent = text;
+      b.addEventListener('click', onClick);
+      return b;
+    }
+
+    function validateEmail(e){
+      // シンプルなチェック。サーバー側バリデーションは必須。
+      if (!e || e.length < 6) return false;
+      const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return re.test(e);
+    }
+
+    // 初期レンダリング
+    renderForStatus();
+
+    // 開発者向け: 状態を切り替えてプレビューする（このコードは本番不要）
+    // console.log('現在の serverStatus:', serverStatus);
+    // 以下はデバッグ用（任意）
+    // setTimeout(()=>{ serverStatus = 'soft_deleted'; renderForStatus(); }, 1000);
+
+  </script>
+</body>
+</html>
